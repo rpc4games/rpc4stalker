@@ -1,0 +1,66 @@
+-- Import lunajson
+package.path = package.path .. ';gamedata\\scripts\\lunajson\\?.lua'
+local lunajson = require("lunajson")
+
+local DATAPATH = os.getenv("TEMP") .. "\\rpc4games.json"
+local ASSETS_BASE_PATH = "https://raw.githubusercontent.com/rpc4games/rpc4stalker/refs/heads/master/assets/"
+
+local ACTIVITY_TYPE = 0 -- "Playing"
+local LARGE_IMG_URL = ASSETS_BASE_PATH .. "stalker_icon_0.png"
+local LARGE_IMG_TEXT = "S.T.A.L.K.E.R."
+
+function write_rpc_data()
+	-- details
+	local lvl_name = game.translate_string(level.name())
+	local details = game.translate_string("st_rpc4stalker_exploring") .. ": " .. lvl_name
+	
+	-- state
+	local state = ""
+	for _, tsk in pairs(task_manager.get_task_manager().task_info) do
+		if db.actor:is_active_task(db.actor:get_task(tsk.id, true)) then
+			state = game.translate_string(tsk.current_title)
+			break
+		end
+	end
+	
+	-- smallImageUrl
+	local faction_name = string.match(db.actor:character_community(), "^actor_(.+)") or "stalker"
+	local small_image_url = ASSETS_BASE_PATH .. "stalker_patch_" .. faction_name .. ".png"
+	
+	-- smallImageText
+	local small_image_text = game.translate_string(db.actor:character_community())
+	
+	-- Prepare JSON data
+	local json_data = {
+		type = ACTIVITY_TYPE,
+		details = details,
+		state = state,
+		largeImageUrl = LARGE_IMG_URL,
+		largeImageText = LARGE_IMG_TEXT,
+		smallImageUrl = small_image_url,
+		smallImageText = small_image_text
+	}
+
+	-- Write values to file
+	local file = io.open(DATAPATH, "w")
+	if file then
+		file:write(lunajson.encode(json_data))
+		file:close()
+	else
+		printe("[rpc4games] Error: Unable to write to %s", DATAPATH)
+	end
+end
+
+function actor_on_first_update()
+	CreateTimeEvent("rpc4stalker", "update_presence_data", 5.0, function()
+		write_rpc_data()
+		
+		-- Wait 5 seconds then loop again
+		ResetTimeEvent("rpc4stalker", "update_presence_data", 5.0)
+		return false
+	end)
+end
+
+function on_game_start()
+	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+end
