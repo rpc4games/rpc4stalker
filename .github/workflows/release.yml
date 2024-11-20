@@ -23,13 +23,13 @@ jobs:
         zip -r rpc4stalker-${{ github.event.inputs.build-ver }}.zip gamedata licences README.md rpc4games.cfg
 
     - name: Create GitHub release
-      id: create_release
       uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.event.inputs.build-ver }}
-        release_name: Release ${{ github.event.inputs.build-ver }}
+        name: Release ${{ github.event.inputs.build-ver }}
         files: rpc4stalker-${{ github.event.inputs.build-ver }}.zip
         draft: false
         prerelease: false
+        make_latest: true
