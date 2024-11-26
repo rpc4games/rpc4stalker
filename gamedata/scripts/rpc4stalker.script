@@ -47,7 +47,7 @@ function write_rpc_data()
 		file:write(lunajson.encode(json_data))
 		file:close()
 	else
-		printe("[rpc4games] Error: Unable to write to %s", DATAPATH)
+		printe("[rpc4stalker] Error: Unable to write to %s", DATAPATH)
 	end
 end
 
